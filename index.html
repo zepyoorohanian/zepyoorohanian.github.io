@@ -1,0 +1,600 @@
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Formula 1 Grand Prix: Street Circuit Suitability</title>
+    <link rel="icon" href="https://imgur.com/HjCEWhe" type="image/icon type">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" 
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+    <style>
+        .map {
+            width: 100%;
+            height: 100%;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .accordion-button.collapsed {
+            color: white;
+            background: rgba(255, 0, 0, 0.8);
+            font-family: 'Formula1Regular';
+        }
+        .accordion-button:not(.collapsed) {
+            color: white;
+            background-color: rgba(255, 0, 0, 0.6);
+            font-family: 'Formula1Regular';
+        }
+        .accordion-button:after {
+            background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>") !important;
+        }
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: rgba(0,0,0,.125);
+        }
+        #tracks {
+            margin-top: 40px;
+            margin-right: 100px;
+            margin-left: 100px;
+            margin-bottom: 60px;
+        }
+
+        @font-face{    font-family:"Formula1Bold";    src:url(https://consent.trustarc.com/get?name=Formula1-Display-Bold_web.ttf) format("truetype"),url(https://consent.trustarc.com/get?name=Formula1-Display-Bold_web.eot) format("embedded-opentype"),url(https://consent.trustarc.com/get?name=Formula1-Display-Bold_web.woff) format("woff"),url(https://consent.trustarc.com/get?name=Formula1-Display-Bold_web.otf) format("opentype"),url(https://consent.trustarc.com/get?name=Formula1-Display-Bold_web.woff2) format("woff2"),url(https://consent.trustarc.com/get?name=Formula1-Display-Bold_web.svg) format("svg");}
+
+        @font-face{    font-family:"Formula1Regular";    src:url(https://consent.trustarc.com/get?name=Formula1-Display-Regular_web.ttf) format("truetype"),url(https://consent.trustarc.com/get?name=Formula1-Display-Regular_web.eot) format("embedded-opentype"),url(https://consent.trustarc.com/get?name=Formula1-Display-Regular_web.woff) format("woff"),url(https://consent.trustarc.com/get?name=Formula1-Display-Regular_web.otf) format("opentype"),url(https://consent.trustarc.com/get?name=Formula1-Display-Regular_web.woff2) format("woff2"),url(https://consent.trustarc.com/get?name=Formula1-Display-Regular_web.svg) format("svg");}
+
+        h1 {
+            text-align: center;
+            font-family: 'Formula1Bold';
+        }
+        h2 {
+            text-align: center;
+            font-family: 'Formula1Bold';
+        }
+        h3 {
+            text-align: center;
+            font-family: 'Formula1Bold';
+            color: rgba(255, 0, 0, 0.8);
+        }
+        h4 {
+            text-align: center;
+            font-family: 'Formula1Regular';
+        }
+        h5 {
+            text-align: center;
+            font-family: 'Formula1Regular';
+        }
+        h6 {
+            text-align: center;
+            font-family: 'Formula1Regular';
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        p {
+          text-align: center;
+          font-family: 'Formula1Regular';
+        }
+        .carousel-caption {
+            font-family: 'Formula1Bold';
+            background-color: rgba(0,0,0,.288);
+        }
+        .form-label {
+            font-family: 'Formula1Regular';
+            text-align: center;
+        }
+        .form-control:focus {
+            box-shadow: none;
+            border-color: rgba(0,0,0,.125);
+        }
+        .form-check-input:focus {
+            box-shadow: none;
+        }
+        input[type='radio']:checked:after {
+        width: 17px;
+        height: 18px;
+        border-radius: 17px;
+        top: -2px;
+        left: -1px;
+        position: relative;
+        background-color: red;
+        content: '';
+        display: inline-block;
+        visibility: visible;
+        border: 2.5px solid white;
+        outline: 1px solid rgba(0,0,0,.288);
+        }
+        .alert-custom{
+        background-color:rgba(255, 0, 0, 0.6);;
+        color: white;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        }
+        .alert-coord-custom {
+            color: white;
+        }
+        .alert-link-custom {
+            color: white;
+        }
+        .alert-link-custom:hover {
+            color: rgba(159, 42, 42, 0.6);
+        }
+        .col-sm-4 {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            transition: transform .2s;
+        }
+        .col-sm-4:hover {
+            transform: scale(1.1);
+        }
+        body {
+            padding-bottom: 50px;
+        }
+        #info {
+          padding-top: 30px;
+          padding-left: 30px;
+          padding-right: 30px;
+        }
+        #result {
+          color:rgba(255, 0, 0, 0.8)
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            <img src="https://i.imgur.com/AzVCjA1.png" alt="" width="110" height="25" class="d-inline-block align-text-top">
+          </a>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="'row">
+            <div class="col">
+                <h1>FORMULA 1 GRAND PRIX: </br>Street Circuit Suitability</h1>
+                <h4>How does your ideal track compare to current street circuits?</h4>
+            </div>
+        </div>
+    </div>
+    <div id="carousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#carousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" data-bs-target="#carousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+          <button type="button" data-bs-target="#carousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+          <button type="button" data-bs-target="#carousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+          <button type="button" data-bs-target="#carousel" data-bs-slide-to="4" aria-label="Slide 5"></button>
+        </div>
+        <div class="carousel-inner">
+          <div class="carousel-item active">
+            <img src="https://i.imgur.com/z7vPags.jpg" height="700" class="d-block w-100" alt="monaco">
+            <div class="carousel-caption d-none d-md-block">
+              <h5><strong>Circuit de Monaco</strong></h5>
+              <p>Length: 3.337 kilometers</br>Number of laps: 78</p>
+            </div>
+          </div>
+          <div class="carousel-item">
+            <img src="https://i.imgur.com/cb9sJmG.jpg" height="700" class="d-block w-100" alt="singapore">
+            <div class="carousel-caption d-none d-md-block">
+              <h5><strong>Marina Bay Street Circuit</strong></h5>
+              <p>Length: 5.063 kilometers</br>Number of laps: 61</p>
+            </div>
+          </div>
+          <div class="carousel-item">
+            <img src="https://i.imgur.com/Ard7Kih.jpg" height="700" class="d-block w-100" alt="sochi">
+            <div class="carousel-caption d-none d-md-block">
+              <h5><strong>Sochi Autodrom</strong></h5>
+              <p>Length: 5.848 kilometers</br>Number of laps: 53</p>
+            </div>
+          </div>
+          <div class="carousel-item">
+            <img src="https://i.imgur.com/p6VFclv.jpg" height="700" class="d-block w-100" alt="melbourne">
+            <div class="carousel-caption d-none d-md-block">
+              <h5><strong>Albert Park Circuit</strong></h5>
+              <p>Length: 5.303 kilometers</br>Number of laps: 58</p>
+            </div>
+          </div>
+          <div class="carousel-item">
+            <img src="https://i.imgur.com/R5xsLrc.jpg" height="700" class="d-block w-100" alt="montreal">
+            <div class="carousel-caption d-none d-md-block">
+              <h5><strong>Circuit de Villeneuve</strong></h5>
+              <p>Length: 4.361 kilometers</br>Number of laps: 70</p>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
+    <div id="info">
+      <h3>FORMULA 1 STREET CIRCUITS</h3>
+      <h5>A street circuit is a collection of <strong>public roads</strong> that are closed off for the purpose of a racing event. Using that definition, there are <strong>five</strong> street circuits in F1 today: <strong>Monaco, Singapore, Sochi, Melbourne, and Montreal</strong>.
+      <br>
+      <br>
+        Explore them all!</h5>
+    </div>
+    <div class="accordion" id="tracks">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="monaco-heading">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#monaco-collapse" aria-expanded="false" aria-controls="monaco-collape">
+              Circuit de Monaco - Monte Carlo, Monaco
+            </button>
+          </h2>
+          <div id="monaco-collapse" class="accordion-collapse collapse" aria-labelledby="monaco-heading">
+            <div class="accordion-body">
+                <h2>Circuit de Monaco</h2>
+                <h5>The Circuit de Monaco had its first Grand Prix in 1950 hosted on the streets of Monte Carlo, with a lap record of 1:12.909 set by Lewis Hamilton in 2021. It is undeniably the most famous track of Formula 1 history and remains one of the most difficult to maneuver with sharp corners and hairpin turns.</h4>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;"><img src="https://i.imgur.com/0DWqEZt.png" height="750" width="1000" alt="Monaco Track"></div>
+                <h2><br>Elevation Profile</h2>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/DENIn1f.png" height="750" width="1000" alt="Monaco Elevation"></div>
+                <h5><br>Monaco is the only street circuit to have the smallest length and major ups and downs. The circuit lays at 3.337 kilometers with 42 meters of elevation change. It has a total of 19 turns, with the highest point sitting at 89.5 meters along Casino Square (Turn 4).</h5>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/y3u0JOk.png" height="450" width="1000" alt="Monaco Turns"></div>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/tdhYBVK.jpg" height="150" width="1000" alt="Monaco Elevation Profile"></div>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="singapore-heading">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#singapore-collapse" aria-expanded="false" aria-controls="singapore-collapse">
+              Marina Bay Street Circuit - Marina Bay, Singapore
+            </button>
+          </h2>
+          <div id="singapore-collapse" class="accordion-collapse collapse" aria-labelledby="singapore-heading">
+            <div class="accordion-body">
+                <h2>Marina Bay Street Circuit</h2>
+                <h5>The Marina Bay Street Circuit had its first Grand Prix in 2008 hosted on the streets of Downtown Core and Kallang, with a lap record of 1:41.905 set by Kevin Magnussen in 2018. The Singapore track has an interesting layout, making it the most stress enduring race of the season for both drivers and teams due to the bumpy street surface and humid conditions.</h4>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;"><img src="https://i.imgur.com/KE2K81B.png" height="750" width="1000" alt="Singapore Track"></div>
+                <h2><br>Elevation Profile</h2>
+                <div style="width:100%;max-width:800px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/dgghCBt.png" height="1010" width="800" alt="Singapore Elevation"></div>
+                <h5><br>Singapore's circuit is mainly flat with a total of 23 turns, the most turns of all the street circuits. It lays at 5.063 kilometers with 5.3 meters of elevation change.</h5>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/wszxJZr.png" height="450" width="1000" alt="Singapore Turns"></div>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/USXF0Jk.jpg" height="150" width="1000" alt="Singapore Elevation Profile"></div>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="sochi-heading">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sochi-collapse" aria-expanded="false" aria-controls="sochi-collapse">
+              Sochi Autodrom - Sochi, Russia
+            </button>
+          </h2>
+          <div id="sochi-collapse" class="accordion-collapse collapse" aria-labelledby="sochi-heading">
+            <div class="accordion-body">
+                <h2>Sochi Autodrom</h2>
+                <h5>The Sochi Autodrom had its first Grand Prix in 2014 hosted in the Black Sea resort town of Sochi in Krasnodar Krai, Russia, with a lap record of 1:35.761 set by Lewis Hamilton in 2019. A famous location that most may remember, the Russian track evolved out of the internal roads of the park built for the city's Winter Olympics in 2014.</h4>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;"><img src="https://i.imgur.com/NBukrJ9.png" height="750" width="1000" alt="Sochi Track"></div>
+                <h2><br>Elevation Profile</h2>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/9WvMCSF.png" height="750" width="1000" alt="Sochi Elevation"></div>
+                <h5><br>Sochi's circuit is mainly flat with a total of 18 turns and lays at 5.848 kilometers with 1.9 meters of elevation change. The drivers face an epic Turn 3, a 750m constant-radius left-hander while the rest of the track is characterised by a series of 90-degree bends.</h5>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/VQfURCB.png" height="450" width="1000" alt="Sochi Turns"></div>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/KVOoR6g.jpg" height="150" width="1000" alt="Sochi Elevation Profile"></div>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="melbourne-heading">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#melbourne-collapse" aria-expanded="false" aria-controls="melbourne-collapse">
+              Albert Park Circuit - Melbourne, Australia
+            </button>
+          </h2>
+          <div id="melbourne-collapse" class="accordion-collapse collapse" aria-labelledby="melbourne-heading">
+            <div class="accordion-body">
+                <h2>Albert Park Circuit</h2>
+                <h5>The Albert Park Circuit had its first Grand Prix in 1996 hosted around Albert Park Lake, three kilometers south of central Melbourne, with a lap record of 1:20.260 set by Charles Leclerc in 2022. Melbourne is also one of the faster tracks on the calendar, with Lewis Hamilton's 2019 lap set at an average of over 146 miles per hour.</h4>
+                <div style="width:100%;max-width:800px;margin-left:auto;margin-right:auto;"><img src="https://i.imgur.com/jkkqOJf.png" height="1010" width="800" alt="Melbourne Track"></div>
+                <h2><br>Elevation Profile</h2>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/NdphYV1.png" height="750" width="1000" alt="Melbourne Elevation"></div>
+                <h5><br>Melbourne's circuit is mainly flat with a total of 14 turns and lays at 5.278 kilometers with 2.6 meters of elevation change. There are only 2.6 meters between the highest point (approaching Turn 13) and the lowest point on the start-finish straight at 7.5 meters.</h5>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/QRRqwSu.png" height="450" width="1000" alt="Melbourne Turns"></div>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/JMEWV42.jpg" height="150" width="1000" alt="Melbourne Elevation Profile"></div>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="montreal-heading">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#montreal-collapse" aria-expanded="false" aria-controls="montreal-collapse">
+              Circuit Gilles Villeneuve - Montreal, Canada
+            </button>
+          </h2>
+          <div id="montreal-collapse" class="accordion-collapse collapse" aria-labelledby="montreal-heading">
+            <div class="accordion-body">
+                <h2>Circuit Gilles Villeneuve</h2>
+                <h5>The Circuit Gilles Villeneuve had its first Grand Prix in 1978 named after Québec Formula 1 driving legend Gilles Villeneuve, which reflects his aggressive and technical driving style. The Montreal circuit has a lap record of 1:13.078 set by Valtteri Bottas in 2019.</h4>
+                <div style="width:100%;max-width:800px;margin-left:auto;margin-right:auto;"><img src="https://i.imgur.com/htW1YeP.png" height="1010" width="800" alt="Montreal Track"></div>
+                <h2><br>Elevation Profile</h2>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/8hPcGYt.png" height="750" width="1000" alt="Montreal Elevation"></div>
+                <h5><br>Montreal's circuit is mainly flat with a total of 14 turns and lays at 4.361 kilometers with 5.2 meters of elevation change. The fast, low-downforce circuit is one of the drivers' favorites, since the track is quite stop-start, with the famous hairpin turn that surrounds the grandstand for fans to experience in real-time.</h5>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/pipFOBS.png" height="450" width="1000" alt="Montreal Turns"></div>
+                <div style="width:100%;max-width:1000px;margin-left:auto;margin-right:auto;margin-top:20px;"><img src="https://i.imgur.com/rxoqfFn.jpg" height="150" width="1000" alt="Montreal Elevation Profile"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <div class="alert alert-custom" role="alert">
+        <h4 class="alert-heading"><strong>STREET CIRCUIT ROUTING MACHINE</strong></h4>
+        <p id="description">Route your circuit by moving the markers anywhere in the world!<br>You can left-click on the map to add another marker, if you wish.<br>Once done, right-click on your starting line to get the exact coordinates.</p>
+    </div>
+    <div id="map" class="map"></div>
+    <div class="alert alert-custom" role="alert">
+      <h4 class="alert-heading">Let's save your circuit!</h4>
+      <p id="coord">Your geoJSON file is: </p>
+      <hr>
+      <div id="geojson"></div>
+    </div>
+    <div class="container">
+        <div class="row align-items-start">
+            <div class="col-sm-4">
+            <div class="card">
+                <img class="card-img-top" src="https://www.formula1.com/content/fom-website/en/latest/features/2016/10/highs-and-lows---which-f1-track-has-the-most-elevation-changes-/_jcr_content/image16x9.img.1536.high.jpg" alt="Card image cap">
+                <div class="card-body">
+                <h5 class="card-title"><strong>Which F1 track has the most elevation changes?</strong></h5>
+                <p class="card-text">Four of the five current street circuits are mostly flat!</p>
+                <div class="col text-center">
+                    <a href="https://www.formula1.com/en/latest/features/2016/10/highs-and-lows---which-f1-track-has-the-most-elevation-changes-.html" class="btn btn-danger"><h6>Explore</h6></a>
+                </div>
+                </div>
+            </div>
+            </div>
+            <div class="col-sm-4">
+            <div class="card">
+                <img class="card-img-top" src="https://www.formula1.com/content/dam/fom-website/manual/Misc/2022manual/2022Races/AustralianGP/Sunday/Bottas%20AUS.jpg.transform/9col/image.jpg" alt="Card image cap">
+                <div class="card-body">
+                <h5 class="card-title"><strong>How does a circuit become 'F1 Ready'?</strong></h5>
+                <p class="card-text">Learn more about creating a suitable track layout!</p>
+                <div class="col text-center">
+                    <a href="https://www.youtube.com/watch_popup?v=HQ_wI5EMEcA" class="btn btn-danger"><h6>Watch</h6></a>
+                </div>
+                </div>
+            </div>
+            </div>
+            <div class="col-sm-4">
+            <div class="card">
+                <img class="card-img-top" src="https://www.racetrackmasters.com/wp-content/uploads/2022/05/F1-purchases-land-worth-240m-for-Las-Vegas-Grand-Prix.jpg" alt="Card image cap">
+                <div class="card-body">
+                <h5 class="card-title"><strong>2023 F1 Las Vegas Street Circuit Layout</strong></h5>
+                <p class="card-text">Get inspired by checking out the newest street circuit!</p>
+                <div class="col text-center">
+                    <a href="https://www.youtube.com/watch_popup?v=dHJojFuJetU" class="btn btn-danger"><h6>Imagine</h6></a>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div class="alert alert-custom" role="alert">
+      <h4 class="alert-heading"><strong>ELEVATION, SLOPE, AND HOSPITALS/CLINICS CHECKER</strong></h4>
+    </div>
+    <iframe width="100%" height="1000" src="https://zepyoorohanian.users.earthengine.app/view/f1-suitability-checker" frameborder="0"></iframe>
+    <div class="alert alert-custom" role="alert">
+        <h4 class="alert-heading center-block"><strong>SUITABILITY SCORE CALCULATOR</strong></h4>
+        <hr><p><strong>Requirements for an ideal street circuit:</strong></p>
+        <h6>1. Distance for one lap should be <strong>greater than 3.5 kilometers</strong> (with the exception of Monaco)</h6>
+        <h6>2. Elevation change should be <strong>less than 6 meters</strong> (with the exception of Monaco)</h6>
+        <h6>3. Maximum slope should be <strong>less than 15 degrees</strong></h6>
+        <h6>4. Circuit should have <strong>nearby hospitals/clinics</strong></h6>
+    </div>
+<!-- score calculator -->
+    <div class="container">
+        <div class="row align-items-start">
+            <div class="col">
+                <form>
+                    <div id="scoretitle">
+                        <h4><strong>Plug in your data and let's see how suitable your street circuit is!</strong></h4>
+                        <hr>
+                    </div>
+                    <div class="mb-3">
+                        <label for="distance" class="form-label"><strong>Distance</strong></label>
+                        <input type="text" class="form-control" id="distance" aria-describedby="distancehelp">
+                        <div id="distancehelp" class="form-text"><p>Enter the distance (kilometers) for one lap around your circuit</p></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="elevation" class="form-label"><strong>Elevation Change</strong></label>
+                        <input type="text" class="form-control" id="elevation" aria-describedby="elevationhelp">
+                        <div id="elevationhelp" class="form-text"><p>Enter the elevation change (meters) for your circuit</p></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="slope" class="form-label"><strong>Slope</strong></label>
+                        <input type="text" class="form-control" id="slope" aria-describedby="slopehelp">
+                        <div id="slopehelp" class="form-text"><p>Enter the maximum slope (degrees) for your circuit</p></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hospitals" class="form-label"><strong>Is there a nearby hospital or clinic?</strong></label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="hospitalsradio" id="radioyes" checked>
+                        <label class="form-label" for="radioyes">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="hospitalsradio" id="radiono">
+                        <label class="form-label" for="radiono">No</label>
+                    </div>
+                </form>
+                <div class="col text-center">
+                    <button type="button" class="btn btn-danger" onclick="score()"><h5>Calculate Score</h5></button>
+                </div>
+            </div>
+            <div class="col">
+                <form>
+                    <div id="scorebreakdown">
+                        <h5><strong>Score Breakdown:</strong></h5>
+                        <hr>
+                        <p><strong>Amazing!</strong><br>4 out of 4 requirements have been met</p>
+                        <p><strong>Almost there!</strong><br>3 out of 4 requirements have been met</p>
+                        <p><strong>This area has potential!</strong><br>2 out of 4 requirements have been met</p>
+                        <p><strong>We still have some work to do!</strong><br>1 out of 4 requirements have been met</p>
+                        <p><strong>Let's try a different area!</strong><br>0 out of 4 requirements have been met</p>
+                        <hr>
+                        <h3>Your Score:</h3>
+                        <p><div id="result"><h3>...</h3></div></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>   
+</body>
+</html>
+
+<script type="text/javascript">
+
+let map = L.map('map');
+
+L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+	maxZoom: 19,
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+}).addTo(map);
+
+//////// original OSM layer ////////
+// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//     attribution: '© OpenStreetMap contributors'
+// }).addTo(map);
+
+let control = L.Routing.control({
+    waypoints: [ // las vegas example
+        L.latLng(36.122284, -115.162720),
+        L.latLng(36.120974, -115.157992),
+        L.latLng(36.116764, -115.158038),
+        L.latLng(36.114522, -115.159821),
+        L.latLng(36.114785, -115.172758),
+        L.latLng(36.124541, -115.169841),
+        L.latLng(36.122302, -115.162537)
+    ],
+    routeWhileDragging: true,
+}).addTo(map);
+
+var alertcoord = document.getElementById('coord')
+
+function alert(message, type) {
+  var wrapper = document.createElement('div')
+  wrapper.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '</div>'
+  alertcoord.append(wrapper)
+}
+
+map.on("contextmenu", function (event) {
+alert("(" + event.latlng.lat.toString() + ", " + event.latlng.lng.toString() + ")", 'coord-custom');
+});
+
+//////////////////////////////////////////////////////////////////////
+function getInstrGeoJson(instr,coord) {
+  var formatter = new L.Routing.Formatter();
+  var instrPts = {
+    type: "FeatureCollection",
+    features: []
+  };
+  for (var i = 0; i < instr.length; ++i) {
+    var g = {
+      "type": "Point",
+      "coordinates": [coord[instr[i].index].lng, coord[instr[i].index].lat]
+    };
+    var p = {
+      "instruction": formatter.formatInstruction(instr[i])
+    };
+    instrPts.features.push({
+      "geometry": g,
+      "type": "Feature",
+      "properties": p
+    });
+  }
+  return instrPts
+}
+
+control.on('routeselected', function(e) {
+  var coord = e.route.coordinates;
+  var instr = e.route.instructions;
+  
+  var geo = JSON.stringify(L.geoJson(getInstrGeoJson(instr,coord)));
+  document.getElementById("geojson").innerHTML = geo;
+
+//   const getCircularReplacer = () => {
+//   const seen = new WeakSet();
+//   return (key, value) => {
+//     if (typeof value === 'object' && value !== null) {
+//       if (seen.has(value)) {
+//         return;
+//       }
+//       seen.add(value);
+//     }
+//     return value;
+//   };
+// };
+
+// const obj = L.geoJson(getInstrGeoJson(instr,coord))
+// obj.name = obj;
+
+// const result = JSON.stringify(obj, getCircularReplacer());
+// console.log(result);
+
+//////////////////////////////////////////////////////////////////
+  // function saveToFile(content, filename) {
+  //     var file = filename + '.geojson';
+  //     saveAs(new File([JSON.stringify(content)], file, {
+  //       type: "text/plain;charset=utf-8"
+  //     }), file);
+  //   }
+  //   // saveToFile(geo.toGeoJSON(), 'test');
+  //   saveToFile(L.geoJson(getInstrGeoJson(instr,coord)), 'test');
+    
+});
+
+function score() {
+  let distance = Number(document.getElementById('distance').value);
+  let elevation = Number(document.getElementById('elevation').value);
+  let slope = Number(document.getElementById('slope').value);
+  let hospitals = document.getElementById('radioyes').checked == true;
+
+    if((document.getElementById('radioyes').checked == true) && (distance <= 3.5) && (elevation > 6) && (slope >= 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>We still have some work to do!</strong></h4><p>Your circuit's distance, elevation change, and slope don't quite match up to the current street circuits.</p>"
+    }
+    else if((distance > 3.5) && (document.getElementById('radioyes').checked == false) && (elevation > 6) && (slope >= 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>We still have some work to do!</strong></h4><p>Your circuit's elevation change, slope, and proximity to hospitals/clinics don't quite match up to the current street circuits.</p>"
+    }
+    else if((elevation <= 6) && (document.getElementById('radioyes').checked == false) && (distance <= 3.5) && (slope >= 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>We still have some work to do!</strong></h4><p>Your circuit's distance, slope, and proximity to hospitals/clinics don't quite match up to the current street circuits.</p>"
+    }
+    else if((slope < 15) && (document.getElementById('radioyes').checked == false) && (elevation > 6) && (distance <= 3.5)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>We still have some work to do!</strong></h4><p>Your circuit's distance, elevation change, and proximity to hospitals/clinics don't quite match up to the current street circuits.</p>"
+    }
+    else if ((document.getElementById('radioyes').checked == true) && (distance > 3.5) && (elevation > 6) && (slope >= 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>This area has potential!</strong></h4><p>Your circuit's elevation change and slope don't quite match up to the current street circuits.</p>"
+    }
+    else if ((document.getElementById('radioyes').checked == true) && (elevation <= 6) && (distance <= 3.5) && (slope >= 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>This area has potential!</strong></h4><p>Your circuit's distance and slope don't quite match up to the current street circuits.</p>"
+    }
+    else if ((document.getElementById('radioyes').checked == true) && (slope < 15) && (distance <= 3.5) && (elevation > 6)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>This area has potential!</strong></h4><p>Your circuit's distance and elevation change don't quite match up to the current street circuits.</p>"
+    }
+    else if ((distance > 3.5) && (elevation <= 6) && (document.getElementById('radioyes').checked == false) && (slope >= 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>This area has potential!</strong></h4><p>Your circuit's slope and proximity to hospitals/clinics don't quite match up to the current street circuits.</p>"
+    }
+    else if ((distance > 3.5) && (slope < 15) && (document.getElementById('radioyes').checked == false) && (elevation > 6)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>This area has potential!</strong></h4><p>Your circuit's elevation change and proximity to hospitals/clinics don't quite match up to the current street circuits.</p>"
+    }
+    else if ((slope < 15) && (elevation <= 6) && (document.getElementById('radioyes').checked == false) && (distance <= 3.5)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>This area has potential!</strong></h4><p>Your circuit's distance and proximity to hospitals/clinics don't quite match up to the current street circuits.</p>"
+    }
+    else if ((distance > 3.5) && (elevation <= 6) && (document.getElementById('radioyes').checked == true) && (slope >= 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>Almost there!</strong></h4><p>Your circuit's slope doesn't quite match up to the current street circuits.</p>"
+    }
+    else if ((distance > 3.5) && (elevation <= 6) && (slope < 15) && (document.getElementById('radioyes').checked == false)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>Almost there!</strong></h4><p>Your circuit's proximity to hospitals/clinics doesn't quite match up to the current street circuits.</p>"
+    }
+    else if ((distance > 3.5) && (slope < 15) && (document.getElementById('radioyes').checked == true) && (elevation > 6)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>Almost there!</strong></h4><p>Your circuit's elevation change doesn't quite match up to the current street circuits.</p>"
+    }
+    else if ((slope < 15) && (elevation <= 6) && (document.getElementById('radioyes').checked == true) && (distance <= 3.5)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>Almost there!</strong></h4><p>Your circuit's distance doesn't quite match up to the current street circuits.</p>"
+    }
+    else if ((distance > 3.5) && (elevation <= 6) && (document.getElementById('radioyes').checked == true) && (slope < 15)) {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>Amazing!</strong></h4><p>You have created an ideal street circuit!</p>"
+    }
+    else {
+      document.getElementById('result').innerHTML = "<hr><h4><strong>Let's try a different area!</strong></h4><p>Your distance, elevation change, slope, and proximity to hospitals/clinics don't match up to the current street circuits.</p>"
+    }
+}
+
+</script>
