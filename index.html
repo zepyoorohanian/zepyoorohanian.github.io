@@ -140,6 +140,10 @@
         #result {
           color:rgba(255, 0, 0, 0.8)
         }
+        #myInput {
+          visibility: hidden;
+        }
+
     </style>
 </head>
 <body>
@@ -318,15 +322,18 @@
       </div>
     <div class="alert alert-custom" role="alert">
         <h4 class="alert-heading"><strong>STREET CIRCUIT ROUTING MACHINE</strong></h4>
-        <p id="description">Route your circuit by moving the markers anywhere in the world!<br>You can left-click on the map to add another marker, if you wish.<br>Once done, right-click on your starting line to get the exact coordinates.</p>
+        <h5 id="description">Route your circuit by dragging the markers anywhere in the world!<br>You can click on the map to add another marker, if you wish.</h5>
     </div>
     <div id="map" class="map"></div>
     <div class="alert alert-custom" role="alert">
       <h4 class="alert-heading">Let's save your circuit!</h4>
-      <p id="coord">Your geoJSON file is: </p>
-      <hr>
-      <div id="geojson"></div>
+      <h5 class = "alert-heading">Copy your track once you're done and paste it into<br>the Elevation, Slope, and Hospitals/Clinics Checker below.</h5><hr>
+      <div class="col text-center">
+          <button type="button" class="btn btn-danger btn-sm" onclick="change(); copy();" id="copied"><h5>Copy Track</h5></button>
+        </div>
+      </div>
     </div>
+    <input type="text" value="" id="myInput">
     <div class="container">
         <div class="row align-items-start">
             <div class="col-sm-4">
@@ -373,7 +380,7 @@
     <iframe width="100%" height="1000" src="https://zepyoorohanian.users.earthengine.app/view/f1-suitability-checker" frameborder="0"></iframe>
     <div class="alert alert-custom" role="alert">
         <h4 class="alert-heading center-block"><strong>SUITABILITY SCORE CALCULATOR</strong></h4>
-        <hr><p><strong>Requirements for an ideal street circuit:</strong></p>
+        <hr><h5><strong>Requirements for an ideal street circuit:</strong></h5>
         <h6>1. Distance for one lap should be <strong>greater than 3.5 kilometers</strong> (with the exception of Monaco)</h6>
         <h6>2. Elevation change should be <strong>less than 6 meters</strong> (with the exception of Monaco)</h6>
         <h6>3. Maximum slope should be <strong>less than 15 degrees</strong></h6>
@@ -449,11 +456,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
 }).addTo(map);
 
-//////// original OSM layer ////////
-// L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//     attribution: '© OpenStreetMap contributors'
-// }).addTo(map);
-
 let control = L.Routing.control({
     waypoints: [ // las vegas example
         L.latLng(36.122284, -115.162720),
@@ -462,7 +464,7 @@ let control = L.Routing.control({
         L.latLng(36.114522, -115.159821),
         L.latLng(36.114785, -115.172758),
         L.latLng(36.124541, -115.169841),
-        L.latLng(36.122302, -115.162537)
+        L.latLng(36.122284, -115.162720)
     ],
     routeWhileDragging: true,
 }).addTo(map);
@@ -479,67 +481,39 @@ map.on("contextmenu", function (event) {
 alert("(" + event.latlng.lat.toString() + ", " + event.latlng.lng.toString() + ")", 'coord-custom');
 });
 
-//////////////////////////////////////////////////////////////////////
-function getInstrGeoJson(instr,coord) {
-  var formatter = new L.Routing.Formatter();
-  var instrPts = {
-    type: "FeatureCollection",
-    features: []
+///////////// add a button to get the geojson /////////////
+
+function routing(coord) {
+  var track = {
+    type: "LineString",
+    coordinates: []
   };
-  for (var i = 0; i < instr.length; ++i) {
-    var g = {
-      "type": "Point",
-      "coordinates": [coord[instr[i].index].lng, coord[instr[i].index].lat]
-    };
-    var p = {
-      "instruction": formatter.formatInstruction(instr[i])
-    };
-    instrPts.features.push({
-      "geometry": g,
-      "type": "Feature",
-      "properties": p
-    });
-  }
-  return instrPts
+  for (i = 0; i < coord.length; i++) {
+    track.coordinates.push([coord[i].lng, coord[i].lat])
+  };
+  return track
 }
 
 control.on('routeselected', function(e) {
   var coord = e.route.coordinates;
-  var instr = e.route.instructions;
-  
-  var geo = JSON.stringify(L.geoJson(getInstrGeoJson(instr,coord)));
-  document.getElementById("geojson").innerHTML = geo;
-
-//   const getCircularReplacer = () => {
-//   const seen = new WeakSet();
-//   return (key, value) => {
-//     if (typeof value === 'object' && value !== null) {
-//       if (seen.has(value)) {
-//         return;
-//       }
-//       seen.add(value);
-//     }
-//     return value;
-//   };
-// };
-
-// const obj = L.geoJson(getInstrGeoJson(instr,coord))
-// obj.name = obj;
-
-// const result = JSON.stringify(obj, getCircularReplacer());
-// console.log(result);
-
-//////////////////////////////////////////////////////////////////
-  // function saveToFile(content, filename) {
-  //     var file = filename + '.geojson';
-  //     saveAs(new File([JSON.stringify(content)], file, {
-  //       type: "text/plain;charset=utf-8"
-  //     }), file);
-  //   }
-  //   // saveToFile(geo.toGeoJSON(), 'test');
-  //   saveToFile(L.geoJson(getInstrGeoJson(instr,coord)), 'test');
-    
+  // var instr = e.route.instructions;
+  var line = JSON.stringify(routing(coord));
+  console.log(line);
+  // console.log(e.route);
+  document.getElementById("myInput").value = line;
 });
+
+function copy() {
+  var copyText = document.getElementById("myInput");
+  copyText.select();
+  copyText.setSelectionRange(0, 99999); /* For mobile devices */
+  navigator.clipboard.writeText(copyText.value);
+  alert("Copied the text: " + copyText.value);
+}
+
+function change() {
+    document.getElementById("copied").innerHTML = "<h5>Track Copied!</h5>";
+}
 
 function score() {
   let distance = Number(document.getElementById('distance').value);
