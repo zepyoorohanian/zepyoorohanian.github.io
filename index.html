@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <style>
         .map {
             width: 100%;
@@ -461,8 +462,61 @@ L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
 }).addTo(map);
 
-let control = L.Routing.control({
-    waypoints: [ // las vegas example
+// let control = L.Routing.control({
+//     waypoints: [ // las vegas example
+//         L.latLng(36.122284, -115.162720),
+//         L.latLng(36.120974, -115.157992),
+//         L.latLng(36.116764, -115.158038),
+//         L.latLng(36.114522, -115.159821),
+//         L.latLng(36.114785, -115.172758),
+//         L.latLng(36.124541, -115.169841),
+//         L.latLng(36.122284, -115.162720)
+//     ],
+//     routeWhileDragging: true,
+//     geocoder: L.Control.Geocoder.nominatim()
+// }).addTo(map);
+
+function createButton(label, container) {
+    var btn = L.DomUtil.create('button', '', container);
+    btn.setAttribute('type', 'button');
+    btn.innerHTML = label;
+    return btn;
+};
+
+map.on('click', function(e) {
+    var container = L.DomUtil.create('div'),
+        startBtn = createButton('Start from this location', container),
+        destBtn = createButton('Go to this location', container);
+
+    L.popup()
+        .setContent(container)
+        .setLatLng(e.latlng)
+        .openOn(map);
+    
+    L.DomEvent.on(startBtn, 'click', function() {
+        control.spliceWaypoints(0, 1, e.latlng);
+        map1.closePopup();
+});
+
+    L.DomEvent.on(destBtn, 'click', function() {
+        control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
+        map1.closePopup();
+});
+});
+
+var ReversablePlan = L.Routing.Plan.extend({
+    createGeocoders: function() {
+        var container = L.Routing.Plan.prototype.createGeocoders.call(this),
+            reverseButton = createButton('↑↓', container);
+        L.DomEvent.on(reverseButton, 'click', function() { 
+          var waypoints = this.getWaypoints(); 
+          this.setWaypoints(waypoints.reverse()); 
+        }, this);
+        return container;
+    }
+});
+
+var plan = new ReversablePlan([
         L.latLng(36.122284, -115.162720),
         L.latLng(36.120974, -115.157992),
         L.latLng(36.116764, -115.158038),
@@ -470,9 +524,14 @@ let control = L.Routing.control({
         L.latLng(36.114785, -115.172758),
         L.latLng(36.124541, -115.169841),
         L.latLng(36.122284, -115.162720)
-    ],
-    routeWhileDragging: true,
-}).addTo(map);
+    ], {
+        geocoder: L.Control.Geocoder.nominatim(),
+        routeWhileDragging: true
+    }),
+    control = L.Routing.control({
+        routeWhileDragging: true,
+        plan: plan
+    }).addTo(map);
 
 var alertcoord = document.getElementById('coord')
 
@@ -480,7 +539,7 @@ function alert(message, type) {
   var wrapper = document.createElement('div')
   wrapper.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '</div>'
   alertcoord.append(wrapper)
-}
+};
 
 map.on("contextmenu", function (event) {
 alert("(" + event.latlng.lat.toString() + ", " + event.latlng.lng.toString() + ")", 'coord-custom');
@@ -489,10 +548,6 @@ alert("(" + event.latlng.lat.toString() + ", " + event.latlng.lng.toString() + "
 ///////////// add a button to get the geojson /////////////
 
 function routing(coord) {
-  // var track = {
-  //   type: "LineString",
-  //   coordinates: []
-  // };
   var track = []
   for (i = 0; i < coord.length; i++) {
     track.push([coord[i].lng, coord[i].lat])
@@ -513,11 +568,11 @@ function copy() {
   copyText.setSelectionRange(0, 99999); /* For mobile devices */
   navigator.clipboard.writeText(copyText.value);
   alert("Copied the text: " + copyText.value);
-}
+};
 
 function change() {
     document.getElementById("copied").innerHTML = "<h5>Track Copied!</h5>";
-}
+};
 
 function score() {
   let distance = Number(document.getElementById('distance').value);
@@ -573,6 +628,6 @@ function score() {
     else {
       document.getElementById('result').innerHTML = "<hr><h4><strong>Let's try a different area!</strong></h4><p>Your distance, elevation change, slope, and proximity to hospitals/clinics don't match up to the current street circuits.</p>"
     }
-}
+};
 
 </script>
