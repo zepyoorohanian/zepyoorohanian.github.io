@@ -323,7 +323,11 @@
       </div>
     <div class="alert alert-custom" role="alert">
         <h4 class="alert-heading"><strong>STREET CIRCUIT ROUTING MACHINE</strong></h4>
-        <h5 id="description">Route your circuit by dragging the markers anywhere in the world!<br>You can click on the map to add another marker, if you wish.</h5>
+        <h5 id="description">
+          1. Delete the default circuit's markers and <br>click anywhere on the map to start from a location<br>
+          2. Click on another area to go to that location<br>
+          3. Add markers to create a lap by choosing the '+' button and <br>clicking on an area to go to that location<hr>
+          You can also drag the markers anywhere in the world, search for an address, and reverse the route.</h5>
     </div>
     <div id="map" class="map"></div>
     <div class="alert alert-custom" role="alert">
@@ -383,7 +387,7 @@
         <h4 class="alert-heading center-block"><strong>SUITABILITY SCORE CALCULATOR</strong></h4>
         <hr><h5><strong>Requirements for an ideal street circuit:</strong></h5>
         <h6>1. Distance for one lap should be <strong>greater than 3.5 kilometers</strong> (with the exception of Monaco)</h6>
-        <h6>2. Elevation change should be <strong>less than 6 meters</strong> (with the exception of Monaco)</h6>
+        <h6>2. Elevation change should be <strong>less than or equal to 6 meters</strong> (with the exception of Monaco)</h6>
         <h6>3. Maximum slope should be <strong>less than 15 degrees</strong></h6>
         <h6>4. Circuit should have <strong>nearby hospitals/clinics</strong></h6>
     </div>
@@ -402,9 +406,14 @@
                         <div id="distancehelp" class="form-text"><p>Enter the distance (kilometers) for one lap around your circuit</p></div>
                     </div>
                     <div class="mb-3">
-                        <label for="elevation" class="form-label"><strong>Elevation Change</strong></label>
-                        <input type="text" class="form-control" id="elevation" aria-describedby="elevationhelp">
-                        <div id="elevationhelp" class="form-text"><p>Enter the elevation change (meters) for your circuit</p></div>
+                        <label for="elevation1" class="form-label"><strong>Maximum Elevation</strong></label>
+                        <input type="text" class="form-control" id="elevation1" aria-describedby="elevationhelp1">
+                        <div id="elevationhelp1" class="form-text"><p>Enter the highest elevation (meters) for your circuit</p></div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="elevation2" class="form-label"><strong>Minimum Elevation</strong></label>
+                      <input type="text" class="form-control" id="elevation2" aria-describedby="elevationhelp2">
+                      <div id="elevationhelp2" class="form-text"><p>Enter the lowest elevation (meters) for your circuit</p></div>
                     </div>
                     <div class="mb-3">
                         <label for="slope" class="form-label"><strong>Slope</strong></label>
@@ -461,20 +470,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
 	maxZoom: 19,
 	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
 }).addTo(map);
-
-// let control = L.Routing.control({
-//     waypoints: [ // las vegas example
-//         L.latLng(36.122284, -115.162720),
-//         L.latLng(36.120974, -115.157992),
-//         L.latLng(36.116764, -115.158038),
-//         L.latLng(36.114522, -115.159821),
-//         L.latLng(36.114785, -115.172758),
-//         L.latLng(36.124541, -115.169841),
-//         L.latLng(36.122284, -115.162720)
-//     ],
-//     routeWhileDragging: true,
-//     geocoder: L.Control.Geocoder.nominatim()
-// }).addTo(map);
 
 function createButton(label, container) {
     var btn = L.DomUtil.create('button', '', container);
@@ -576,7 +571,7 @@ function change() {
 
 function score() {
   let distance = Number(document.getElementById('distance').value);
-  let elevation = Number(document.getElementById('elevation').value);
+  let elevation = Number(document.getElementById('elevation1').value - document.getElementById('elevation2').value);
   let slope = Number(document.getElementById('slope').value);
   let hospitals = document.getElementById('radioyes').checked == true;
 
